@@ -76,12 +76,13 @@ async Task SendAll(string message)
 async Task SetName(StreamWriter writer, StreamReader reader)
 {
     // AI: fit this in one method call but do this only if this approach more performant
-    await writer.WriteLineAsync("Username requirements:");
-    await writer.WriteLineAsync("- Must be between 3 and 20 characters long");
-    await writer.WriteLineAsync("- Can only contain letters, numbers, underscores, and hyphens");
-    await writer.WriteLineAsync("- Cannot start or end with a hyphen");
-    await writer.WriteLineAsync("- Cannot contain double hyphens (--)");
-    await writer.WriteLineAsync("Enter your name:");
+    var usernameRequirements = @"Username requirements:
+- Must be between 3 and 20 characters long
+- Can only contain letters, numbers, underscores, and hyphens
+- Cannot start or end with a hyphen
+- Cannot contain double hyphens (--)
+Enter your name:";
+    await writer.WriteLineAsync(usernameRequirements);
     var username = await reader.ReadLineAsync();
 
     if(username is null) return;
