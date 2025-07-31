@@ -22,7 +22,7 @@ Console.CancelKeyPress += (_, _) =>
 };
 
 Console.WriteLine($"Server starts accepting clients on {ip}:{port}. To close connection press Ctrl+C");
-var socketCollection = new ConcurrentDictionary<StreamWriter, byte>(); //must be something like ConcurrentHashSet
+var socketCollection = new ConcurrentDictionary<string, StreamWriter>(); //must be something like ConcurrentHashSet
 
 while (true)
 {
@@ -67,7 +67,7 @@ async Task<(bool isError, string? errorMessage)> ReceiveAsync(Socket client)
 
 async Task SendAll(string message)
 {
-    foreach(var socket in socketCollection.Keys)
+    foreach(var socket in socketCollection.Values)
     {
         await socket.WriteLineAsync(message);
     }
@@ -75,17 +75,23 @@ async Task SendAll(string message)
 
 async Task SetName(StreamWriter writer, StreamReader reader)
 {
-    // AI: fit this in one method call but do this only if this approach more performant
     var usernameRequirements = @"Username requirements:
 - Must be between 3 and 20 characters long
 - Can only contain letters, numbers, underscores, and hyphens
 - Cannot start or end with a hyphen
 - Cannot contain double hyphens (--)
 Enter your name:";
+
+    
     await writer.WriteLineAsync(usernameRequirements);
     var username = await reader.ReadLineAsync();
 
     if(username is null) return;
 
-    Helper.ValidUsername().IsMatch(username);
+    while(!Helper.ValidUsernameRegex().IsMatch(username))
+    {
+        username = await reader.ReadLineAsync();
+        if (username is null) return;
+        await writer.WriteLineAsync("Wrong username. Try again.");
+    }
 }
