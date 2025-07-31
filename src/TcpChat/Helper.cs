@@ -5,7 +5,11 @@ namespace Shannels;
 
 internal static partial class Helper
 {
-    // AI: write comment explaining this regex to people that will read this code
+    // This regex validates usernames with the following rules:
+    // - Length must be between 3 and 20 characters
+    // - Can contain alphanumeric characters, underscores, and hyphens
+    // - Cannot start or end with a hyphen
+    // - Cannot contain consecutive hyphens (like "--")
     [GeneratedRegex(@"^(?!.*--)(?!-)(?!.*-$)[\w-]{3,20}$", RegexOptions.IgnoreCase)]
     public static partial Regex ValidUsername();
 
