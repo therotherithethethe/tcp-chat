@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.RegularExpressions;
 using Shannels;
 
 var (ip, port) = Helper.ParseArgs(args);
@@ -56,7 +57,7 @@ async Task<(bool isError, string? errorMessage)> ReceiveAsync(Socket client)
         var message = await streamReader.ReadLineAsync();
         if(message is null || message.Trim() == string.Empty) continue;
 
-        _ = SendAll($"{username}: {message}");
+        _ = SendAll($"{username}: {message.}");
     }
     if(!socketCollection.TryRemove(socketWriter, out _))
         return (true, "Unexpected behavior on removing socket from the collection");
@@ -74,13 +75,12 @@ async Task SendAll(string message)
 
 async Task SetName(StreamWriter writer, StreamReader reader)
 {
+    // AI: please write to the user userfriendly message for notyfying him about what username can be from regex.
+    await writer.WriteLineAsync("")
     await writer.WriteLineAsync("Enter your name:");
     var username = await reader.ReadLineAsync();
 
     if(username is null) return;
 
-    if(username.Length is not > 2 and < 16 || username.Contains("!@#$%^&*()+={[\\|\"\':;?/.>,<]}~` "))
-    {
-        await writer.WriteLineAsync("You've entered wrong name");
-    }
+    Helper.ValidUsername().IsMatch(username);
 }
