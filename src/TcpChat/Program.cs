@@ -76,7 +76,11 @@ async Task SendAll(string message)
 async Task SetName(StreamWriter writer, StreamReader reader)
 {
     // AI: please write to the user userfriendly message for notyfying him about what username can be from regex.
-    await writer.WriteLineAsync("")
+    await writer.WriteLineAsync("Username requirements:");
+    await writer.WriteLineAsync("- Must be between 3 and 20 characters long");
+    await writer.WriteLineAsync("- Can only contain letters, numbers, underscores, and hyphens");
+    await writer.WriteLineAsync("- Cannot start or end with a hyphen");
+    await writer.WriteLineAsync("- Cannot contain double hyphens (--)");
     await writer.WriteLineAsync("Enter your name:");
     var username = await reader.ReadLineAsync();
 
