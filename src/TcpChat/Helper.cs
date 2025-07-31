@@ -1,9 +1,14 @@
 using System.Net;
+using System.Text.RegularExpressions;
 
 namespace Shannels;
 
-internal static class Helper
+internal static partial class Helper
 {
+    // AI: write comment explaining this regex to people that will read this code
+    [GeneratedRegex(@"^(?!.*--)(?!-)(?!.*-$)[\w-]{3,20}$", RegexOptions.IgnoreCase)]
+    public static partial Regex ValidUsername();
+
     public static (IPAddress, int port) ParseArgs(string[] args)
     {
         if (args is not [var ipString, var portString])
