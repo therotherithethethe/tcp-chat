@@ -11,7 +11,7 @@ internal static partial class Helper
     // - Cannot start or end with a hyphen
     // - Cannot contain consecutive hyphens (like "--")
     [GeneratedRegex(@"^(?!.*--)(?!-)(?!.*-$)[\w-]{3,20}$", RegexOptions.IgnoreCase)]
-    public static partial Regex ValidUsername();
+    public static partial Regex ValidUsernameRegex();
 
     public static (IPAddress, int port) ParseArgs(string[] args)
     {
@@ -20,6 +20,8 @@ internal static partial class Helper
             ShowUsageInfo("\nError: Please provide exactly two arguments: an IP address and a port number.");
             throw new ArgumentException("");
         }
+        if(ipString == "localhost")
+            ipString = "127.0.0.1";
 
         var validationErrors = new List<string>();
 

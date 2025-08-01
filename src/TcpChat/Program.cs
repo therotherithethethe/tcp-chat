@@ -1,8 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using System.Text.RegularExpressions;
 using Shannels;
 
 var (ip, port) = Helper.ParseArgs(args);
@@ -13,67 +11,76 @@ var ipEndPoint = new IPEndPoint(ip, port);
 listener.Bind(ipEndPoint);
 listener.Listen(100);
 
-Console.CancelKeyPress += (_, _) =>
+var cts = new CancellationTokenSource();
+Console.CancelKeyPress += (_, args) =>
 {
-
+    args.Cancel = true; 
     Console.ForegroundColor = ConsoleColor.Red;
     Console.WriteLine("\nShutdowing...");
     Console.ResetColor();
+    cts.Cancel();
 };
 
 Console.WriteLine($"Server starts accepting clients on {ip}:{port}. To close connection press Ctrl+C");
-var socketCollection = new ConcurrentDictionary<string, StreamWriter>(); //must be something like ConcurrentHashSet
+var socketCollection = new ConcurrentDictionary<string, StreamWriter>(); 
 
-while (true)
+while (!cts.Token.IsCancellationRequested)
 {
-    var clientSocket = await listener.AcceptAsync();
-    _ = ReceiveAsync(clientSocket).ContinueWith(async errorTask =>
+    try
     {
-        var (isError, errorMessage) = await errorTask;
-        if (isError)
+        var clientSocket = await listener.AcceptAsync(cts.Token);
+
+        // Does it affect perfomance? idk
+        _ = Task.Run(async () =>
         {
-
-            Console.WriteLine("Server crashed.\n  - " + errorMessage!);
-            await SendAll("Server crashed");
-        }
-    });
+            try
+            {
+                await ReceiveAsync(clientSocket, cts.Token);
+            }
+            catch (Exception ex) 
+            {
+                Console.WriteLine($"Error processing client: {ex.Message}");
+            }
+        }, cts.Token);
+    }
+    catch (OperationCanceledException)
+    {
+        
+    }
+    
 }
-
-async Task<(bool isError, string? errorMessage)> ReceiveAsync(Socket client)
+async Task ReceiveAsync(Socket client, CancellationToken token)
 {
     await using var socketStream = new NetworkStream(client);
     await using var socketWriter = new StreamWriter(socketStream) {AutoFlush = true};
     
-    if(!socketCollection.TryAdd(socketWriter, 0))
-        return (true, "Unexpected behavior on adding socket to the collection");
-
     using var streamReader = new StreamReader(socketStream);
 
-    await socketWriter.WriteLineAsync("Enter your username kiddo");
-    var username = await streamReader.ReadLineAsync();
-    await socketWriter.WriteLineAsync($"So your username is {{{username}}}. Be carefull.");
+    var username = await SetName(socketWriter, streamReader, token);
     while (client.Connected)
     {
-        var message = await streamReader.ReadLineAsync();
+        var message = await streamReader.ReadLineAsync(token);
         if(message is null || message.Trim() == string.Empty) continue;
 
-        _ = SendAll($"{username}: {message.}");
+        _ = SendAll($"{username}: {message}", token);
     }
-    if(!socketCollection.TryRemove(socketWriter, out _))
-        return (true, "Unexpected behavior on removing socket from the collection");
+    /* if(!socketCollection.TryRemove(username!, out _))
+        return (true, "Unexpected behavior on removing socket from the collection"); */
 
-    return (false, null);
+    if(!socketCollection.TryRemove(username!, out _))
+        throw new InvalidOperationException("Unexpected behavior on removing socket from the collection");
+    
 }
 
-async Task SendAll(string message)
+async Task SendAll(string message, CancellationToken token)
 {
     foreach(var socket in socketCollection.Values)
     {
-        await socket.WriteLineAsync(message);
+        await socket.WriteLineAsync(message.AsMemory(), token);
     }
 }
 
-async Task SetName(StreamWriter writer, StreamReader reader)
+async Task<string?> SetName(StreamWriter writer, StreamReader reader, CancellationToken token)
 {
     var usernameRequirements = @"Username requirements:
 - Must be between 3 and 20 characters long
@@ -82,16 +89,23 @@ async Task SetName(StreamWriter writer, StreamReader reader)
 - Cannot contain double hyphens (--)
 Enter your name:";
 
-    
+
     await writer.WriteLineAsync(usernameRequirements);
-    var username = await reader.ReadLineAsync();
+    var username = await reader.ReadLineAsync(token);
 
-    if(username is null) return;
+    if(username is null) return null;
 
-    while(!Helper.ValidUsernameRegex().IsMatch(username))
+    while(!isUserNameValid(username))
     {
-        username = await reader.ReadLineAsync();
-        if (username is null) return;
         await writer.WriteLineAsync("Wrong username. Try again.");
+        username = await reader.ReadLineAsync(token);
+        if (username is null) return null;
     }
+    if(!socketCollection.TryAdd(username, writer))
+        throw new InvalidOperationException("Unexpected behavior on adding socket from the collection");
+
+    await writer.WriteLineAsync($"Nice, {username}, be carefull :)");
+    return username;
 }
+
+bool isUserNameValid(string username) => Helper.ValidUsernameRegex().IsMatch(username);
