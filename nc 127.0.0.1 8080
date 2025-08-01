@@ -1,0 +1,31 @@
+
+### Username Requirements
+
+When connecting, clients must provide a valid username that follows these rules:
+- Must be between 3 and 20 characters long
+- Can only contain letters, numbers, underscores, and hyphens
+- Cannot start or end with a hyphen
+- Cannot contain double hyphens (--)
+- Must be unique among connected clients
+
+### Usage
+
+1. Start the server with one of the methods above
+2. Connect with a telnet client
+3. Enter a valid username when prompted
+4. Start chatting! Messages will be broadcast to all connected clients
+5. Press Ctrl+C to gracefully shut down the server
+
+## Implementation Details
+
+This project demonstrates several important C# concepts:
+- Asynchronous programming with `async`/`await`
+- Concurrent collections for thread-safe operations
+- TCP socket programming
+- CancellationToken usage for graceful shutdowns
+- Regular expressions for input validation
+- Proper resource disposal with `using` statements
+
+## License
+
+This project is available for educational purposes.
