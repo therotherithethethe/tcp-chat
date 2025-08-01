@@ -1,14 +1,16 @@
+
+```md
 # TCP Chat Server
 
-A simple asynchronous TCP chat server written in C# to demonstrate asynchronous programming concepts. This project serves as a testbed for exploring async/await patterns and concurrent programming in .NET.
+A simple asynchronous TCP chat server written in C# to demonstrate asynchronous programming concepts. This project serves as a testbed for exploring `async/await` patterns and concurrent programming in .NET.
 
 ## Features
 
 - Asynchronous TCP server implementation
 - Multiple client support
 - Concurrent message broadcasting
-- Username validation
-- Graceful shutdown handling
+- Username validation with specific requirements
+- Graceful shutdown handling with `Ctrl+C`
 
 ## Getting Started
 
@@ -19,62 +21,109 @@ A simple asynchronous TCP chat server written in C# to demonstrate asynchronous 
 
 ### Running the Server
 
-You can run the server in several ways:
+You can run the server using `dotnet run`, providing an IP address and port as arguments.
 
-1.  **Direct execution with dotnet run:**
-    ```bash
-    dotnet run <IP_ADDRESS> <PORT>
-    ```
+```bash
+dotnet run <IP_ADDRESS> <PORT>
+```
 
-2.  **Publish and run:**
-    ```bash
-    dotnet publish -c Release
-    ./bin/Release/netX.0/publish/TcpChat.exe <IP_ADDRESS> <PORT>
-    ```
+## Examples
 
-3.  **Run published DLL:**
-    ```bash
-    dotnet TcpChat.dll <IP_ADDRESS> <PORT>
-    ```
+This example shows how to start the server and have two users connect and chat.
 
-### Examples
+### 1. Start the Server
 
-#### Starting the Server
-
-To start the server on your local machine on port 8080:
+In your first terminal, start the server and have it listen on `127.0.0.1` port `8080`.
 
 ```bash
 dotnet run 127.0.0.1 8080
 ```
 
-#### Connecting to the Server
+The server will output the following and wait for connections:
 
-You can connect to the running server using `telnet` or `nc`.
+```
+Server starts accepting clients on 127.0.0.1:8080. To close connection press Ctrl+C
+```
 
-**Using `telnet`:**
+### 2. User1 (Alice) Connects
+
+In a **new terminal window**, User1 connects using `telnet`.
 
 ```bash
 telnet 127.0.0.1 8080
 ```
 
-**Using `nc` (netcat):**
+The server immediately prompts for a username with the validation rules from your code:
 
-```bash
-nc 127.0.0.1 8080
+```
+Trying 127.0.0.1...
+Connected to 127.0.0.1.
+Escape character is '^]'.
+Username requirements:
+- Must be between 3 and 20 characters long
+- Can only contain letters, numbers, underscores, and hyphens
+- Cannot start or end with a hyphen
+- Cannot contain double hyphens (--)
+Enter your name:
 ```
 
-After connecting, you will be prompted to set a username.
+Alice types her username `Alice` and presses Enter. The server confirms her username.
 
-## Commands
+```
+Alice
+Nice, Alice, be carefull :)
+```
 
-Once connected, you can use the following commands:
+### 3. User2 (Bob) Connects
 
--   **Setting a username:**
-    The first thing you must do after connecting is set your username. The server will prompt you with: `Welcome to the server! Please set your username:`
-    Simply type your desired username and press Enter.
+In a **third terminal window**, User2 connects.
 
--   **Sending messages:**
-    Once your username is set, anything you type will be broadcast to all other connected clients. For example: `Hello everyone!`
+```bash
+telnet 127.0.0.1 8080
+```
 
--   **Disconnecting:**
-    To disconnect from the server, simply close your terminal client using `Ctrl+C` or `Ctrl+]` and then `quit` for telnet.
+Bob sees the same username prompt. He enters `Bob` and is also welcomed.
+
+```
+Trying 127.0.0.1...
+Connected to 127.0.0.1.
+Escape character is '^]'.
+Username requirements:
+... (same as above)
+Enter your name:
+Bob
+Nice, Bob, be carefull :)
+```
+
+### 4. Chatting
+
+Now, the chat can begin.
+
+**In Alice's terminal**, she types a message and presses Enter.
+
+```
+Hello everyone!
+```
+
+**In Bob's terminal**, he instantly sees Alice's message broadcast by the server.
+
+```
+Alice: Hello everyone!
+```
+
+Now **Bob replies in his terminal**.
+
+```
+Hi Alice, welcome to the chat!
+```
+
+**Alice's terminal** is updated with Bob's message.
+
+```
+Bob: Hi Alice, welcome to the chat!
+```
+
+### 5. Disconnecting
+
+If Alice closes her `telnet` session (e.g., with `Ctrl+]` then `quit`), she will be disconnected. If Bob sends another message, only he will see it, as Alice is no longer in the chat.
+```
