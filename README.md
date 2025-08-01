@@ -1,5 +1,3 @@
-
-```md
 # TCP Chat Server
 
 A simple asynchronous TCP chat server written in C# to demonstrate asynchronous programming concepts. This project serves as a testbed for exploring `async/await` patterns and concurrent programming in .NET.
@@ -126,4 +124,3 @@ Bob: Hi Alice, welcome to the chat!
 ### 5. Disconnecting
 
 If Alice closes her `telnet` session (e.g., with `Ctrl+]` then `quit`), she will be disconnected. If Bob sends another message, only he will see it, as Alice is no longer in the chat.
-```
